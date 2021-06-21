@@ -1,0 +1,286 @@
+import pygame
+import pygame.locals
+import pyperclip
+import random
+
+pygame.init()
+
+run = True
+pygame.display.set_caption('Encrypt/Decrypt')
+
+# Sets box color
+grayActive = (192,192,192)
+grayPassive = (105,105,105)
+buttonPassive = (255,255,255)
+buttonActive = (204,0,0)
+cbPassive = (96,96,96)
+cbActive = (204,0,0)
+clearPassive = (96,96,96)
+clearActive = (204,0,0)
+buttonColor = buttonPassive
+copyButtonColor = cbPassive
+c1Color = clearPassive 
+c2Color = clearPassive
+color1 = grayPassive
+color2 = grayPassive
+active1 = False
+active2 = False
+active3 = False
+copyActive = False
+clear1 = False
+clear2 = False
+grayBorder = (200,200,200)
+redBorder = (255,0,0)
+borderColor = grayBorder
+textPassive = "No Input"
+textDecrypt = "Decrypt"
+textEncrypt = "Encrypt"
+textError = "1 Box Only"
+
+# Sets the screen and its resolution
+res = 800, 650
+screen = pygame.display.set_mode((res))
+
+
+# Defines text font (Style, Size) and texts
+baseFont = pygame.font.Font(None, 32)
+clearFont = pygame.font.Font(None, 27)
+buttonFont = pygame.font.Font(None, 50)
+outputFont = pygame.font.Font(None,45)
+encryptText = 'Enter Text to Encrypt'
+decryptText = 'Enter Text to Decrypt'
+copyText = "Copy"
+clear1Text = "Clear"
+clear2Text = "Clear"
+
+encryptTextSurface = baseFont.render(encryptText, True, (255,255,255))
+decryptTextSurface = baseFont.render(decryptText, True, (255,255,255))
+outputTextSurface = outputFont.render("Output", True, (255,255,255))
+c1TextSurface = clearFont.render(clear1Text, True, (255,255,255))
+c2TextSurface = clearFont.render(clear2Text, True, (255,255,255))
+copyTextSurface = baseFont.render(copyText, True, (255,255,255))
+input1Text = ''
+input2Text = ''
+opText2 = ""
+
+
+# Defines clock for fps
+clock = pygame.time.Clock()
+
+# Defines the input rectangle/box ((x,y) coords where the 
+# rectangle will be, (x,y) how big the input box will be)
+input1Rect = pygame.Rect(100,100,140,32)
+input2Rect = pygame.Rect(100,200,140,32)
+buttonRect = pygame.Rect(250,300,300,75)
+copyRect = pygame.Rect(10,440,100,50)
+clear1Rect = pygame.Rect(10,100,70,32)
+clear2Rect = pygame.Rect(10,200,70,32)
+
+alphabet = "abcdefghijklmnopqrstuvwxyz"
+
+def rot13(message):
+    alphabetUp = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    alphabetLow = "abcdefghijklmnopqrstuvwxyz"
+    ciphered = ""
+    for i in message:
+        if i.isalpha():
+            if str.isupper(i):
+                index = alphabetUp.find(i)+13
+                if index > 25:
+                    index -= 25
+                    ciphered += alphabetUp[index]
+                else:
+                    ciphered += alphabetUp[index]
+            else:
+                index = alphabetLow.find(i)+13
+                if index > 25:
+                    index -= 25
+                    ciphered += alphabetLow[index]
+                else:
+                	ciphered += alphabetLow[index]    
+        else:
+            ciphered += i
+    return ciphered
+
+def decrypt(message):
+    alphabetUp = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    alphabetLow = "abcdefghijklmnopqrstuvwxyz"
+    ciphered = ""
+    for i in message:
+        if i.isalpha():
+            if str.isupper(i):
+                index = alphabetUp.find(i)-13
+                if index < 0:
+                    index = 25+index
+                    ciphered += alphabetUp[index]
+                else:
+                    ciphered += alphabetUp[index]
+            else:
+                index = alphabetLow.find(i)-13
+                if index < 0:
+                    index = 25+index
+                    ciphered += alphabetLow[index]
+                else:
+                	ciphered += alphabetLow[index]    
+        else:
+            ciphered += i
+    return ciphered
+
+def buttonPress(input1Text,input2Text):
+	len1 = len(input1Text)
+	len2 = len(input2Text)
+	if (len1 > 0) and (len2 > 0):
+
+		return "Cannot Decrypt and Encrypt Simultaneously"
+	elif (len1==0) and (len2==0):
+		return "Need Input"
+	elif (len1>0) and (len2==0):
+		return rot13(input1Text)
+	elif (len1==0) and (len2>0):
+		return decrypt(input2Text)
+
+while run:
+	# fills the screen black
+	screen.fill((0,0,0))
+	active3 = False
+	copyActive = False
+	clear1 = False 
+	clear2 = False
+	# loops through every event
+	for event in pygame.event.get():
+		pos = pygame.mouse.get_pos()
+		# exits the game
+		if event.type == pygame.QUIT:
+			run = False
+
+		if event.type == pygame.MOUSEBUTTONDOWN:
+			if input1Rect.collidepoint(event.pos):
+				active1 = True
+			elif input2Rect.collidepoint(event.pos):
+				active2 = True
+			elif buttonRect.collidepoint(event.pos):
+				active3 = True
+				opText2 = buttonPress(input1Text, input2Text)
+			elif copyRect.collidepoint(event.pos):
+				copyActive = True 
+				pyperclip.copy(opText2)
+			elif clear1Rect.collidepoint(event.pos):
+				clear1 = True  
+				input1Text = ""
+			elif clear2Rect.collidepoint(event.pos):
+				clear2 = True  
+				input2Text = ""
+			else:
+				active1 = False
+				active2 = False
+		if event.type == pygame.KEYDOWN:
+			# checks if backspace is pressed, if so then it deletes the previous letter/text
+			if active1 == True:
+			    if event.key == pygame.K_BACKSPACE:
+			    	input1Text = input1Text[0:-1]
+			    elif event.key == pygame.K_v and pygame.key.get_mods() & pygame.KMOD_LCTRL:
+			    	input1Text = pyperclip.paste()					
+			    else:
+			    	if len(input1Text) > 42:
+			    		input1Text = input1Text
+			    	else:
+			    		# event.unicode Gets the specific button pressed
+				        # reassigns input1Text every time there's an input
+			    		input1Text += event.unicode
+			elif active2 == True:
+				if event.key == pygame.K_BACKSPACE:
+					input2Text = input2Text[0:-1]
+				elif event.key == pygame.K_v and pygame.key.get_mods() & pygame.KMOD_LCTRL:
+					input2Text = pyperclip.paste()
+				else:
+					if len(input2Text) > 42:
+						input2Text = input2Text
+					else:
+						input2Text += event.unicode
+
+	if active1 and active2:
+		active1 = False
+		active2 = False
+
+	if clear1:
+		c1Color = clearActive
+	elif clear2:
+		c2Color = clearActive
+	else:
+		c1Color = clearPassive
+		c2Color = clearPassive
+
+	if copyActive:
+		copyButtonColor = cbActive
+	else:
+		copyButtonColor = cbPassive
+
+	if active3:
+		buttonColor = buttonActive
+	else:
+		buttonColor = buttonPassive
+
+	if active1:
+		color1 = grayActive
+	else:
+		color1 = grayPassive
+
+	if active2:
+		color2 = grayActive
+	else:
+		color2 = grayPassive
+
+
+	# Defines button text
+	buttonText = "Encrypt/Decrypt"
+	buttonTextSurface = buttonFont.render(buttonText, True, (255,255,255))
+
+	if (len(input1Text) > 0) and (len(input2Text) == 0):
+		buttonText = "Encrypt"
+	elif (len(input1Text) == 0) and (len(input2Text) > 0):
+		buttonText = "Decrypt"
+	else:
+		buttonText = "Encrypt/Decrypt"
+
+
+
+    # draws the rectangle (surface, color, rect, border width)
+    # Rect 1
+	pygame.draw.rect(screen,color1,input1Rect,2)
+	# Rect 2
+	pygame.draw.rect(screen,color2,input2Rect,2)
+	# Button Rect
+	pygame.draw.rect(screen,buttonColor,buttonRect,2)
+	# Copy Button Rect
+	pygame.draw.rect(screen,copyButtonColor,copyRect,5)
+	# Clear Button Rects
+	pygame.draw.rect(screen,c1Color,clear1Rect,2)
+	pygame.draw.rect(screen,c2Color,clear2Rect,2)
+	# Input Line Border
+	pygame.draw.line(screen,(255,255,255),(0,500),(800,500))
+    # Defines the text about to be rendered (Text to render, True, color/rgb)
+	text1Surface = baseFont.render(input1Text, True, (255,255,255))
+	text2Surface = baseFont.render(input2Text, True, (255,255,255))
+	opText2Surface = outputFont.render(opText2, True, (204,0,0))
+	# Adjusts the width of the box every text
+	input1Rect.w = max(100, text1Surface.get_width() + 10)
+	input2Rect.w = max(100, text2Surface.get_width() + 10)
+	# Renders text to surface 
+	screen.blit(opText2Surface, (10,510))
+	screen.blit(outputTextSurface, (340, 465))
+	screen.blit(c1TextSurface, (clear1Rect.x+10 , clear1Rect.y+8))
+	screen.blit(c2TextSurface, (clear2Rect.x+10 , clear2Rect.y+8))
+	screen.blit(copyTextSurface, (copyRect.x+20, copyRect.y+15))
+	screen.blit(buttonTextSurface, (buttonRect.x+15, buttonRect.y+20))
+	screen.blit(text1Surface,(input1Rect.x + 5, input1Rect.y +5))
+	screen.blit(text2Surface,(input2Rect.x + 5, input2Rect.y +5))
+	screen.blit(encryptTextSurface, (input1Rect.x, input1Rect.y -32))
+	screen.blit(decryptTextSurface, (input2Rect.x, input2Rect.y -32))
+
+
+    # Constantly updates the screen for changes
+	pygame.display.update()
+	# Sets fps
+	clock.tick(60)
+
+
